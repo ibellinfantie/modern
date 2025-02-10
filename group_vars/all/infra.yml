@@ -1,0 +1,20 @@
+---
+
+# HMC access
+hmc_username: ''
+hmc_password: ''
+hmc_hostname: ''
+
+
+# VMs to Create
+vm01_hostname: "vm01"
+vm02_hostname: "vm02"
+
+
+workers_list:
+        - worker_name: "worker-0"
+        - worker_name: "worker-1"
+        - worker_name: "worker-2"
+
+# name of the disk created in PowerVC to be attached to vm01
+new_vol: "modern"

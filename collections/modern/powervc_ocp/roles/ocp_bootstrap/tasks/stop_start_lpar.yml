@@ -1,0 +1,20 @@
+---
+   - debug:
+       msg: "starting lpar {{ os_server_name }} on system {{ os_server_host }}"
+
+   - name: startup the  lpar
+     connection: local
+     ibm.power_hmc.powervm_lpar_instance:
+        hmc_host: "{{ hmc_hostname }}"
+        hmc_auth: 
+           username: '{{ hmc_username }}'
+           password: '{{ hmc_password }}'
+        system_name: "{{ os_server_host }}"
+        vm_name: "{{ os_server_name }}"
+        action: "{{ stop_start }}"
+     register: event
+     delegate_to: localhost
+
+   - debug:
+       var=event
+

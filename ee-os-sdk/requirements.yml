@@ -1,0 +1,9 @@
+---
+collections:
+ - name: openstack.cloud
+ - name: modern.powervc_ocp
+ - name: ansible.posix
+ - name: ansible.utils
+ - name: ansible.netcommon
+ - name: community.general
+ - name: ibm.power_hmc

@@ -1,0 +1,27 @@
+---
+- name: Deploy some VMs
+  gather_facts: false
+  hosts: localhost
+  become: true
+
+  tasks:
+   - name: Create a single server 
+     ansible.builtin.import_role:
+       name: modern.powervc_ocp.powervcvm
+     vars: 
+       vm_name: "{{ vm01_hostname }}"
+
+   - name: allocate openstack storage
+     ansible.builtin.import_role:
+       name: modern.powervc_ocp.os_add_volumes
+     vars:
+       vm_name: "{{ vm01_hostname }}"
+       os_volume: "{{ new_vol }}"
+   
+   - name: Create multiple servers
+     ansible.builtin.import_role:
+       name: modern.powervc_ocp.ocp_nodes_create
+
+   - name: deploy multiple servers
+     ansible.builtin.import_role:
+       name: modern.powervc_ocp.ocp_bootstrap

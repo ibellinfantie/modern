@@ -1,0 +1,78 @@
+---
+
+   - name: Get the infraid
+     shell:
+       "cd /opt/install ; jq -r .infraID metadata.json"
+     register: infraid_out
+
+
+   - debug:
+       var=infraid_out
+
+   - name: save the infraid
+     set_fact:
+       infraid: "{{( infraid_out.stdout ) }}"
+
+   - debug:
+       msg: "INFRAID set as {{ infraid }}"
+
+
+   - name: Retrieve list of all servers in this project
+     os_server_info:
+       auth:
+         auth_url: '{{ os_auth_url }}'
+         username: '{{ os_username }}'
+         password: '{{ os_password }}'
+         project_name: '{{ os_project_name }}'
+         user_domain_name: '{{ os_user_domain_name }}'
+         project_domain_name: "{{ os_project_domain_name }}"
+       validate_certs: false
+     delegate_to: localhost
+     register: servers
+
+   - name: Get the bastion  server details
+     debug:
+      msg: "{{ servers | community.general.json_query(jmespath) }}"
+     vars:
+      jmespath:  "servers[?name == '{{ bastion_hostname }}'].{name: name, id: id, status: status, access_ipv4: access_ipv4}"
+
+
+   - name: get the bastion server name and IP Fact
+     set_fact:
+       server_name: "{{ servers | community.general.json_query(jmespath_name) | replace('[','' ) | replace(']','' )}}"
+       server_ip: "{{servers | community.general.json_query(jmespath_ip) | replace('[','' ) | replace(']','' )}}"
+     vars:
+       jmespath_name:  "servers[?name == '{{ bastion_hostname }}'].name | [0]"
+       jmespath_ip:  "servers[?name == '{{ bastion_hostname }}'].access_ipv4 | [0]"
+
+
+   - name: update eei /etc/hosts for {{ server_ip }} {{ server_name }}
+     lineinfile:
+       path: /etc/hosts
+       state: present
+       backup: true
+       line: "{{ server_ip }}      {{ server_name }} "
+
+
+   - name: create the bootstrap server
+     include_tasks: "create_bootstrap.yml"
+     vars:
+       bootstrap_name: "{{ infraid }}-bootstrap"
+
+
+   - name: create the master servers
+     include_tasks: "create_master_node.yml"
+     vars:
+       master_name: "{{ item.master_name }}"
+     loop: "{{ masters_list }}"
+
+  
+   - name: create the worker servers
+     include_tasks: "create_worker_node.yml"
+     vars:
+       worker_name: "{{ item.worker_name }}"
+     loop: "{{ workers_list }}"
+
+
+
+

@@ -1,0 +1,20 @@
+---
+
+  - name: get the lpar details from openstack
+    set_fact:
+      os_server_name: "{{ servers | community.general.json_query(jmespath_name) | replace('[','' ) | replace(']','' )}}"
+      os_server_ip: "{{servers | community.general.json_query(jmespath_ip) | replace('[','' ) | replace(']','' )}}"
+      os_server_host: "{{servers | community.general.json_query(jmespath_host) | replace('[','' ) | replace(']','' ) | replace('9119MME_','Server-9119-MME-SN' )}}"
+    vars:
+      jmespath_name:  "servers[?name == '{{ server_name }}'].instance_name | [0]"
+      jmespath_ip:  "servers[?name == '{{ server_name }}'].access_ipv4 | [0]"
+      jmespath_host:  "servers[?name == '{{ server_name }}'].compute_host | [0]"
+    register: lpar_details
+
+  - name: startup the lpar
+    include_tasks: "stop_start_lpar.yml"
+    vars:
+      stop_start: 'poweron'
+   
+
+

@@ -1,0 +1,20 @@
+---
+
+ - name: Attach an Openstack LUN to a VM 
+   os_server_volume:
+     state: present
+     auth:
+       auth_url: '{{ os_auth_url }}'
+       username: '{{ os_username }}'
+       password: '{{ os_password }}'
+       project_name: '{{ os_project_name }}'
+       user_domain_name: '{{ os_user_domain_name }}'
+       project_domain_name: '{{ os_project_domain_name }}'
+     validate_certs: no
+     server: "{{ vm_name }}"
+     volume: "{{ os_volume }}"
+   register: attached
+
+# - debug:
+#     var=attached
+

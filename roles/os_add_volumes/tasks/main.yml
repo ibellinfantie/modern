@@ -1,0 +1,3 @@
+---
+# tasks file for os_add_volumes
+- import_tasks: add_lun.yml

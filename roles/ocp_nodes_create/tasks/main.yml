@@ -1,0 +1,3 @@
+---
+# tasks file for ocp_create_nodes
+- import_tasks: os_create_nodes.yml

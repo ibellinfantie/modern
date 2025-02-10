@@ -1,0 +1,3 @@
+---
+# tasks file for ocp_bootstrap
+ - import_tasks: ocp_bootstrap.yml

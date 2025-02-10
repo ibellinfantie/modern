@@ -1,0 +1,82 @@
+---
+
+ - name: Create a new VM in PowerVC
+   os_server:
+       state: present
+       auth:
+         auth_url: '{{ os_auth_url }}'
+         username: '{{ os_username }}'
+         password: '{{ os_password }}'
+         project_name: '{{ os_project_name }}'
+         user_domain_name: '{{ os_user_domain_name }}'
+         project_domain_name: '{{ os_project_domain_name }}'
+       timeout: 900
+       validate_certs: no
+       name:  '{{ vm_name }}'
+       image:  '{{ powervc_rhel_image }}'
+       flavor: '{{ worker_flavor }}'
+       nics:
+           - net-id: '{{ powervc_net_id }}'
+       userdata: |
+            {%- raw -%}#!/bin/bash
+            service sshd restart
+            {% endraw %}
+   register: vmout
+
+ - debug: var=vmout
+   tags: [ never, debug ]
+
+ - name: Retrieve list of all servers in this project
+   os_server_info:
+     auth:
+       auth_url: '{{ os_auth_url }}'
+       username: '{{ os_username }}'
+       password: '{{ os_password }}'
+       project_name: '{{ os_project_name }}'
+       user_domain_name: '{{ os_user_domain_name }}'
+       project_domain_name: "{{ os_project_domain_name }}"
+     validate_certs: false
+   register: servers
+
+#- debug: var=servers
+#  tags: [ never, debug ]
+
+ - debug:
+     msg: "vm name is {{ vm_name }}"
+
+ - name: Get the created server
+   debug:
+    msg: "{{ servers | community.general.json_query(jmespath) }}"
+   vars:
+    jmespath:  "servers[?name == '{{ vm_name }}'].{name: name, id: id, status: status, access_ipv4: access_ipv4}"
+
+
+ - name: get the server name and IP Fact
+   set_fact:
+     server_name: "{{ servers | community.general.json_query(jmespath_name) | replace('[','' ) | replace(']','' )}}"
+     server_ip: "{{servers | community.general.json_query(jmespath_ip) | replace('[','' ) | replace(']','' )}}"
+   vars:
+     jmespath_name:  "servers[?name == '{{ vm_name }}'].name | [0]"
+     jmespath_ip:  "servers[?name == '{{ vm_name }}'].access_ipv4 | [0]"
+
+
+
+ - name: update eei /etc/hosts for {{ server_ip }} {{ server_name }}
+   lineinfile:  
+     path: /etc/hosts
+     state: present
+     backup: true
+     line: "{{ server_ip }}      {{ server_name }} "
+   delegate_to: localhost
+
+
+ - name: Pause for 2 minutes to allow the interface to be up
+   ansible.builtin.pause:
+     minutes: 2
+
+
+ - name: update created server for domainname
+   shell: hostnamectl set-hostname "{{ server_name + '.' + ocp_cluster_domain }}"
+   delegate_to: "{{ server_name }}"
+
+

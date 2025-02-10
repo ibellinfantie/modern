@@ -1,0 +1,3 @@
+---
+# tasks file for powervcvm
+- import_tasks: powervc.yml

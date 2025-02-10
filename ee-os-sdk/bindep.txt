@@ -1,0 +1,6 @@
+libxml2-devel
+libxslt-devel
+python3-devel
+gcc
+python3-lxml
+

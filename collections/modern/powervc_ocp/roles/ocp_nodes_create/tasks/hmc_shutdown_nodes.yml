@@ -1,0 +1,34 @@
+---
+
+   - name: Retrieve new list  of all servers in this project
+     os_server_info:
+       auth:
+         auth_url: '{{ os_auth_url }}'
+         username: '{{ os_username }}'
+         password: '{{ os_password }}'
+         project_name: '{{ os_project_name }}'
+         user_domain_name: '{{ os_user_domain_name }}'
+         project_domain_name: "{{ os_project_domain_name }}"
+       validate_certs: false
+     delegate_to: localhost
+     register: servers
+
+   - name: get the lpar details from openstack
+     set_fact:
+       os_server_name: "{{ servers | community.general.json_query(jmespath_name) | replace('[','' ) | replace(']','' )}}"
+       os_server_ip: "{{servers | community.general.json_query(jmespath_ip) | replace('[','' ) | replace(']','' )}}"
+       os_server_host: "{{servers | community.general.json_query(jmespath_host) | replace('[','' ) | replace(']','' ) | replace('9119MME_','Server-9119-MME-SN' )}}"
+     vars:
+       jmespath_name:  "servers[?name == '{{ server_name }}'].instance_name | [0]"
+       jmespath_ip:  "servers[?name == '{{ server_name }}'].access_ipv4 | [0]"
+       jmespath_host:  "servers[?name == '{{ server_name }}'].compute_host | [0]"
+     register: lpar_details
+
+
+   - name: shutdown the lpar
+     include_tasks: "stop_start_lpar.yml"
+     vars:
+       stop_start: 'shutdown'
+   
+
+

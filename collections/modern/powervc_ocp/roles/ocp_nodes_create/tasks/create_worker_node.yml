@@ -1,0 +1,58 @@
+---
+
+   - name: Check if the worker exists
+     set_fact:
+       worker_server_name: "{{ servers | community.general.json_query(jmespath_name) | replace('[','' ) | replace(']','' )}}"
+       worker_server_ip: "{{servers | community.general.json_query(jmespath_ip) | replace('[','' ) | replace(']','' )}}"
+     vars:
+       jmespath_name:  "servers[?name == '{{ worker_name }}'].name | [0]"
+       jmespath_ip:  "servers[?name == '{{ worker_name }}'].access_ipv4 | [0]"
+
+
+   - debug:
+       msg: "EXISTS!! worker_server_name:{{ worker_server_name }} and worker_name:{{ worker_name }}"
+     when: worker_server_name == worker_name
+
+   - debug:
+       msg: "CREATING, does not EXIST! worker_server_name:{{ worker_server_name }} and worker_name:{{ worker_name }}"
+     when: worker_server_name != worker_name
+
+
+   - name: Create the worker
+     os_server:
+         state: present
+         auth:
+           auth_url: '{{ os_auth_url }}'
+           username: '{{ os_username }}'
+           password: '{{ os_password }}'
+           project_name: '{{ os_project_name }}'
+           user_domain_name: '{{ os_user_domain_name }}'
+           project_domain_name: '{{ os_project_domain_name }}'
+         timeout: 900
+         validate_certs: no
+         name: "{{ worker_name }}"
+         image:  '{{  powervc_rhel_image }}'
+         flavor: '{{ worker_flavor }}'
+         nics:
+             - net-id: '{{ powervc_net_id }}'
+     delegate_to: localhost
+     register: vmout
+
+   - debug: var=vmout
+     when: worker_server_name != worker_name
+
+   - name: Pause for 2 minutes to initialise the ignition
+     ansible.builtin.pause:
+       minutes: 2
+
+   - debug:
+       msg: " shutting down {{ worker_name }}"
+
+
+   - name: now shutdown the node until ready for bootstrap
+     include_tasks: "hmc_shutdown_nodes.yml"
+     vars:
+       server_name: "{{ worker_name }}"
+
+
+
