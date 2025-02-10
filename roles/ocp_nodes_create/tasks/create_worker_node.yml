@@ -17,14 +17,6 @@
        msg: "CREATING, does not EXIST! worker_server_name:{{ worker_server_name }} and worker_name:{{ worker_name }}"
      when: worker_server_name != worker_name
 
-   - name: fetch the worker ignition file
-     ansible.builtin.fetch:
-       src: "/opt/install/worker.ign"
-       dest: "worker.ign"
-       flat: yes
-     when: worker_server_name != worker_name
-
-
 
    - name: Create the worker
      os_server:
@@ -55,8 +47,6 @@
 
    - debug:
        msg: " shutting down {{ worker_name }}"
-
-
 
 
    - name: now shutdown the node until ready for bootstrap

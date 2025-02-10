@@ -15,6 +15,6 @@
      volume: "{{ os_volume }}"
    register: attached
 
- - debug:
-     var=attached
+# - debug:
+#     var=attached
 

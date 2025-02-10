@@ -75,8 +75,3 @@
      minutes: 2
 
 
- - name: update created server for domainname
-   shell: hostnamectl set-hostname "{{ server_name + '.' + ocp_cluster_domain }}"
-   delegate_to: "{{ server_name }}"
-
-
